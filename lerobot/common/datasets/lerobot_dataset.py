@@ -139,7 +139,13 @@ class LeRobotDatasetMetadata:
 
     def get_video_file_path(self, ep_index: int, vid_key: str) -> Path:
         ep_chunk = self.get_episode_chunk(ep_index)
+        print(self.video_path)
         fpath = self.video_path.format(episode_chunk=ep_chunk, video_key=vid_key, episode_index=ep_index)
+        return Path(fpath)
+    
+    def get_visualization_video_file_path(self, ep_index: int, vid_key: str) -> Path:
+        video_path = "visualization/{video_key}/episode_{episode_index:06d}.mp4"
+        fpath = video_path.format(video_key=vid_key, episode_index=ep_index)
         return Path(fpath)
 
     def get_episode_chunk(self, ep_index: int) -> int:
@@ -893,7 +899,7 @@ class LeRobotDataset(torch.utils.data.Dataset):
             self.tolerance_s,
         )
 
-        video_files = list(self.root.rglob("*.mp4"))
+        video_files = [p for p in set(self.root.rglob("*.mp4")) if "visualization" not in str(p)]
         assert len(video_files) == self.num_episodes * len(self.meta.video_keys)
 
         parquet_files = list(self.root.rglob("*.parquet"))

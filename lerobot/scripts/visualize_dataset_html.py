@@ -83,6 +83,7 @@ def run_server(
 ):
     app = Flask(__name__, static_folder=static_folder.resolve(), template_folder=template_folder.resolve())
     app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0  # specifying not to cache
+    app.debug = True
 
     @app.route("/")
     def hommepage(dataset=dataset):
@@ -173,6 +174,11 @@ def run_server(
             video_paths = [
                 dataset.meta.get_video_file_path(episode_id, key) for key in dataset.meta.video_keys
             ]
+            if len(video_paths) == 0:
+                video_paths = [
+                dataset.meta.get_visualization_video_file_path(episode_id, key) for key in dataset.meta.image_keys
+            ]
+            
             videos_info = [
                 {
                     "url": url_for("static", filename=str(video_path).replace("\\", "/")),
@@ -180,6 +186,7 @@ def run_server(
                 }
                 for video_path in video_paths
             ]
+            print(videos_info)
             tasks = dataset.meta.episodes[episode_id]["tasks"]
         else:
             video_keys = [key for key, ft in dataset.features.items() if ft["dtype"] == "video"]
