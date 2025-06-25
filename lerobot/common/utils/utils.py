@@ -88,7 +88,7 @@ def get_safe_dtype(dtype: torch.dtype, device: str | torch.device):
 
 def is_torch_device_available(try_device: str) -> bool:
     try_device = str(try_device)  # Ensure try_device is a string
-    if try_device == "cuda":
+    if try_device in ["cuda", "cuda:0", "cuda:1"]:
         return torch.cuda.is_available()
     elif try_device == "mps":
         return torch.backends.mps.is_available()

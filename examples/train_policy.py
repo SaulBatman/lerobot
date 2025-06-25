@@ -27,16 +27,17 @@ from lerobot.common.datasets.utils import dataset_to_policy_features
 from lerobot.common.policies.diffusion.configuration_diffusion import DiffusionConfig
 from lerobot.common.policies.diffusion.modeling_diffusion import DiffusionPolicy
 from lerobot.configs.types import FeatureType
-
+from lerobot.common.constants import HF_LEROBOT_HOME
 
 def main():
     # Create a directory to store the training checkpoint.
     dataset_id = "saulbatman/videopo"
-    output_directory = Path("outputs/train/example_pusht_diffusion")
+    # dataset_id = "lerobot/pusht"
+    output_directory = Path(HF_LEROBOT_HOME) / "outputs" / "train" / "example_videopo"
     output_directory.mkdir(parents=True, exist_ok=True)
 
     # # Select your device
-    device = torch.device("cuda")
+    device = torch.device("cuda:1")
 
     # Number of offline training steps (we'll only do offline training for this example.)
     # Adjust as you prefer. 5000 steps are needed to get something worth evaluating.
@@ -65,21 +66,14 @@ def main():
     # which can differ for inputs, outputs and rewards (if there are some).
     delta_timestamps = {
         "observation.images.dave": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
+        "observation.images.tim": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
+        # "observation.robot_eef_pos": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
+        # "observation.robot_eef_quat": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
+        # "observation.robot_eef_qpos": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
         "observation.state": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
         "action": [i / dataset_metadata.fps for i in cfg.action_delta_indices],
     }
 
-    # In this case with the standard configuration for Diffusion Policy, it is equivalent to this:
-    delta_timestamps = {
-        # Load the previous image and state at -0.1 seconds before current frame,
-        # then load current image and state corresponding to 0.0 second.
-        "observation.images.dave": [-0.1, 0.0],
-        "observation.state": [-0.1, 0.0],
-        # Load the previous action (-0.1), the next action to be executed (0.0),
-        # and 14 future actions with a 0.1 seconds spacing. All these actions will be
-        # used to supervise the policy.
-        "action": [-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4],
-    }
 
     # We can then instantiate the dataset with these delta_timestamps configuration.
     dataset = LeRobotDataset(dataset_id, delta_timestamps=delta_timestamps)
